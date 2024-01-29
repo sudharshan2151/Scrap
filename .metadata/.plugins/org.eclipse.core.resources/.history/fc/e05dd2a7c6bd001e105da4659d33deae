@@ -1,0 +1,53 @@
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import com.scrap.model.Product;
+
+public class App {
+
+    public static void main(String[] args) {
+        App scraper = new App();
+        List<Product> laptops = scraper.scrapeLaptops("560001");
+
+        // Process the extracted data as needed
+        for (Product laptop : laptops) {
+            System.out.println(laptop);
+        }
+    }
+
+    public List<Product> scrapeLaptops(String pincode) {
+        List<Product> laptops = new ArrayList<>();
+
+        try {
+            String url = "https://www.amazon.in/pincode/" + pincode;
+            Document document = Jsoup.connect(url).get();
+
+            // Identify the HTML elements for laptops (adjust accordingly)
+            Elements laptopElements = document.select(".your-laptop-class");
+
+            for (Element laptopElement : laptopElements) {
+                // Extract data for each laptop
+                String skuId = laptopElement.select(".sku-class").text();
+                String productName = laptopElement.select(".name-class").text();
+                String productTitle = laptopElement.select(".title-class").text();
+                String description = laptopElement.select(".description-class").text();
+
+                // Create a Product object and add it to the list
+                Product laptop = new Product(skuId, productName, productTitle, description);
+                laptops.add(laptop);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return laptops;
+    }
+
+    
+}

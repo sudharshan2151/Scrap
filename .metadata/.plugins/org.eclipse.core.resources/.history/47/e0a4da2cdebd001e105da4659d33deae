@@ -1,0 +1,131 @@
+package com.scrap.Scrap1;
+
+/**
+ * Hello world!
+ *
+ */
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+public class AmazonINScraper {
+
+    private static final String AMAZON_URL = "https://www.amazon.in";
+    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
+
+    public static void main(String[] args) {
+        scrapeAmazon("560001"); // Bangalore Pincode
+        scrapeAmazon("110001"); // Delhi Pincode
+    }
+
+    // ... (previous code)
+
+    private static class Laptop {
+        private String skuId;
+        private String productName;
+        private String productTitle;
+        private String description;
+        private String category;
+        private String subcategory;
+        private double deliveryFee;
+        private String estimatedDeliveryTime;
+
+        // Constructors, getters, and setters
+
+        // ... (previous code)
+    }
+
+    private static void scrapeAmazon(String pincode) {
+        try {
+            // Connect to Amazon using Jsoup
+            Document document = Jsoup.connect(AMAZON_URL + "/s?k=laptops&pincode=" + pincode)
+                    .userAgent(USER_AGENT)
+                    .get();
+
+            // Extract laptop information
+            List<Laptop> laptops = extractLaptops(document);
+
+            // Map the extracted data with categories and subcategories
+            mapCategoriesAndSubcategories(laptops);
+
+            // Extract delivery info
+            extractDeliveryInfo(laptops, pincode);
+
+            // Save the extracted data in gzip of ndjson
+            saveToGzipNdjson(laptops, pincode);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static List<Laptop> extractLaptops(Document document) {
+        List<Laptop> laptops = new ArrayList<>();
+
+        // TODO: Implement laptop extraction logic based on the actual structure of the Amazon page
+        // Example: Assume each laptop information is in a certain HTML element
+        Elements laptopElements = document.select(".your-laptop-class"); // Example selector
+        for (Element laptopElement : laptopElements) {
+            String skuId = laptopElement.attr("data-sku-id");
+            String productName = laptopElement.select(".product-name-class").text();
+            String productTitle = laptopElement.select(".product-title-class").text();
+            String description = laptopElement.select(".description-class").text();
+
+            laptops.add(new Laptop(skuId, productName, productTitle, description));
+        }
+
+        return laptops;
+    }
+
+    private static void mapCategoriesAndSubcategories(List<Laptop> laptops) {
+        // TODO: Implement category mapping logic based on the actual structure of the Amazon page
+        // Example: Assume the category and subcategory are in a certain HTML element
+        for (Laptop laptop : laptops) {
+            // You need to adapt this logic based on the actual structure of the Amazon page
+            laptop.setCategory("Laptops");
+            laptop.setSubcategory("General Laptops");
+        }
+    }
+
+    private static void extractDeliveryInfo(List<Laptop> laptops, String pincode) {
+        // TODO: Implement delivery info extraction logic based on the actual structure of the Amazon page
+        // Example: Assume delivery fee and estimated delivery time are in a certain HTML element
+        for (Laptop laptop : laptops) {
+            // You need to adapt this logic based on the actual structure of the Amazon page
+            laptop.setDeliveryFee(5.0); // Example delivery fee
+            laptop.setEstimatedDeliveryTime("2 days"); // Example estimated delivery time
+        }
+    }
+
+    private static void saveToGzipNdjson(List<Laptop> laptops, String pincode) {
+        try {
+            // Create a GzipOutputStream
+            try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(
+                    new FileOutputStream("laptops_" + pincode + ".json.gz"))) {
+                
+                // Create a BufferedWriter for efficient writing
+                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(gzipOutputStream))) {
+                    
+                    // Create a Gson instance for JSON serialization
+                    Gson gson = new GsonBuilder().create();
+
+                    // Iterate through laptops and write each one as a JSON line
+                    for (Laptop laptop : laptops) {
+                        String json = gson.toJson(laptop);
+                        writer.write(json);
+                        writer.newLine();
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
